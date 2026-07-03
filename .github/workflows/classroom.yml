@@ -1,0 +1,45 @@
+name: GitHub Classroom Autograding
+on: [push]
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  autograding:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1. 파일 존재 여부 체크 단계
+      - name: Check solution.py exists
+        id: file-check
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "파일 존재 확인"
+          setup-command: ""
+          command: "test -f solution.py"
+          timeout: 1
+          max-score: 10
+
+      # 2. 코드 기능 테스트 단계 (pytest)
+      - name: Run pytest
+        id: pytest-check
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "기능 테스트 (pytest)"
+          setup-command: "pip install pytest"
+          command: "pytest test_solution.py"
+          timeout: 2
+          max-score: 20
+
+      # 3. 점수를 취합하여 GitHub Classroom에 전달하는 단계
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          FILE-CHECK_RESULTS: "${{steps.file-check.outputs.result}}"
+          PYTEST-CHECK_RESULTS: "${{steps.pytest-check.outputs.result}}"
+        with:
+          runners: file-check,pytest-check
